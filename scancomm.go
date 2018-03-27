@@ -72,9 +72,17 @@ func main() {
 		}
 	}
 	println ("Host that no snmp community:")
+	var validhost int = 0
+	var nosnmphost int =0
 	for _, h:=range hostsSlice {
 		if h !="0" {
+			nosnmphost++
 			println ("ip: ",h) 
-		}
+		} else {
+			validhost++
+		 }
 	}
+	fmt.Println("Total hosts  : ",len(hostsSlice))
+	fmt.Println("Guessed SNMP : ",validhost)
+	fmt.Println("Wrong SNMP   : ",nosnmphost)
 }
