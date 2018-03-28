@@ -27,7 +27,7 @@ type Hosts struct {
 
 func main() {
 	sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
-	comms := []string{"public", "Public", "Etthkpi12", "eltex12", "selrktjgnsdkl"}
+	comms := []string{"eltex12","public", "Public", "Etthkpi12",  "selrktjgnsdkl"}
 	// if process data from db
 	//bs, err := ioutil.ReadFile("hosts")
 	//i/f err != nil {
@@ -66,6 +66,7 @@ func main() {
 	*/
 
 	for _, comm := range comms {
+		fmt.Println("#####################  ",comm,"  #########################")
 		for _, h := range hst {
 			
 			fmt.Println("h.ip = "+h.ip+" h.commm = ", h.community, " Descr = "+h.Descr)
@@ -77,8 +78,8 @@ func main() {
 					gosnmp.Default.Community = h.community
 				}
 
-				gosnmp.Default.Timeout = 590000000
-				gosnmp.Default.Retries = 5
+				gosnmp.Default.Timeout = 290000000
+				gosnmp.Default.Retries = 2
 				err := gosnmp.Default.Connect()
 				if err != nil {
 					fmt.Print("host:=", h.ip, " ")
@@ -107,6 +108,7 @@ func main() {
 							h.community = comm
 							fmt.Println("updating community ip: ",h.ip," community: ",h.community)
 							//panic("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
+							fmt.Println("--update result: ",err)
 							if err != nil {
 								panic(err)
 							}
@@ -135,11 +137,7 @@ func main() {
 	for _, h := range hst {
 		if h.community == "" {
 			nosnmphost++
-<<<<<<< HEAD
-			//println ("ip: ",h) 
-=======
 			//println("ip: ", h.ip)
->>>>>>> e557a288b302ce42157f0534b927edcc5441a3fc
 		} else {
 			validhost++
 		}
