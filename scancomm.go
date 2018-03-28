@@ -37,7 +37,7 @@ func main() {
 			if h != "0" && h != "" {
 				gosnmp.Default.Target = h
 				gosnmp.Default.Community = comm
-				gosnmp.Default.Timeout = 90000000 
+				gosnmp.Default.Timeout = 400000000 
 				err := gosnmp.Default.Connect()
 				if err != nil {
 					fmt.Print("host:=",h," ")
@@ -77,7 +77,7 @@ func main() {
 	for _, h:=range hostsSlice {
 		if h !="0" {
 			nosnmphost++
-			println ("ip: ",h) 
+			//println ("ip: ",h) 
 		} else {
 			validhost++
 		 }
