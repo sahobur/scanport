@@ -20,7 +20,7 @@ import (
 
 func main() {
 	sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
-	comms := []string{"public", "Etthkpi12", "eltex12", "selrktjgnsdkl"}
+	comms := []string{"public", "Public", "Etthkpi12", "eltex12", "selrktjgnsdkl"}
 	bs, err := ioutil.ReadFile("hosts")
 	if err != nil {
 		log.Fatalln(err)
@@ -37,17 +37,18 @@ func main() {
 			if h != "0" && h != "" {
 				gosnmp.Default.Target = h
 				gosnmp.Default.Community = comm
-				gosnmp.Default.Timeout = 90000000 
+				gosnmp.Default.Timeout = 290000000
+				gosnmp.Default.Retries = 10
 				err := gosnmp.Default.Connect()
 				if err != nil {
-					fmt.Print("host:=",h," ")
+					fmt.Print("host:=", h, " ")
 					log.Println("Connect() err: %v", err)
 
 				}
 
 				result, err2 := gosnmp.Default.Get(sysDescr)
 				if err2 != nil {
-					fmt.Println("Get() err: host: ", h," Comm: ",comm, " Error: ", err2)
+					fmt.Println("Get() err: host: ", h, " Comm: ", comm, " Error: ", err2)
 					continue
 				}
 				//hostsSlice = append(hostsSlice[:n], hostsSlice[n+1:]...)
@@ -71,18 +72,18 @@ func main() {
 			}
 		}
 	}
-	println ("Host that no snmp community:")
+	println("Host that no snmp community:")
 	var validhost int = 0
-	var nosnmphost int =0
-	for _, h:=range hostsSlice {
-		if h !="0" {
+	var nosnmphost int = 0
+	for _, h := range hostsSlice {
+		if h != "0" {
 			nosnmphost++
-			println ("ip: ",h) 
+			println("ip: ", h)
 		} else {
 			validhost++
-		 }
+		}
 	}
-	fmt.Println("Total hosts  : ",len(hostsSlice))
-	fmt.Println("Guessed SNMP : ",validhost)
-	fmt.Println("Wrong SNMP   : ",nosnmphost)
+	fmt.Println("Total hosts  : ", len(hostsSlice))
+	fmt.Println("Guessed SNMP : ", validhost)
+	fmt.Println("Wrong SNMP   : ", nosnmphost)
 }
