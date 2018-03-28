@@ -21,15 +21,17 @@ import (
 func main() {
 	sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
 	comms := []string{"public", "Public", "Etthkpi12", "eltex12", "selrktjgnsdkl"}
+	// if process data from db
 	bs, err := ioutil.ReadFile("hosts")
 	if err != nil {
 		log.Fatalln(err)
 	}
 	str := string(bs)
 	hosts := strings.Split(str, "\n")
-	// scan to db
+
 	var hostsSlice []string = hosts[0:]
-	fmt.Println(hostsSlice)
+	//fmt.Println(hostsSlice)
+
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
 	defer db.Close()
 	for _, comm := range comms {
@@ -37,12 +39,12 @@ func main() {
 			if h != "0" && h != "" {
 				gosnmp.Default.Target = h
 				gosnmp.Default.Community = comm
-				gosnmp.Default.Timeout = 290000000
-				gosnmp.Default.Retries = 10
+				gosnmp.Default.Timeout = 390000000
+				gosnmp.Default.Retries = 5
 				err := gosnmp.Default.Connect()
 				if err != nil {
 					fmt.Print("host:=", h, " ")
-					log.Println("Connect() err: %v", err)
+					log.Println("Connect() err: ", err)
 
 				}
 
@@ -71,6 +73,7 @@ func main() {
 				}
 			}
 		}
+
 	}
 	println("Host that no snmp community:")
 	var validhost int = 0
