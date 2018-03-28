@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"log"
 	//"os/exec"
-	"strings"
+	//"strings"
 
 	//"github.com/BurntSushi/toml"
 	//"github.com/soniah/gosnmp"
 	_ "github.com/go-sql-driver/mysql"
 	//"os"
-	"io/ioutil"
+	//"io/ioutil"
 	//"strings"
 )
 
@@ -29,14 +29,14 @@ func main() {
 	sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
 	comms := []string{"public", "Public", "Etthkpi12", "eltex12", "selrktjgnsdkl"}
 	// if process data from db
-	bs, err := ioutil.ReadFile("hosts")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	str := string(bs)
-	hosts := strings.Split(str, "\n")
+	//bs, err := ioutil.ReadFile("hosts")
+	//i/f err != nil {
+	//	log.Fatalln(err)
+//	}
+	//str := string(bs)
+	//hosts := strings.Split(str, "\n")
 
-	var hostsSlice []string = hosts[0:]
+	//var hostsSlice []string = hosts[0:]
 	//fmt.Println(hostsSlice)
 
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
@@ -55,16 +55,19 @@ func main() {
 	if err = rows.Err(); err != nil {
 		log.Fatal(err)
 	}
-
+/*
 	for n, gg := range hst {
 		hostsSlice[n] = gg.ip
-		//fmt.Printf("%d, %s, %s, %s\n", gg.id, gg.ip, gg.community, gg.Descr)
+		fmt.Printf("%d, %s, %s, %s\n", gg.id, gg.ip, gg.community, gg.Descr)
+		fmt.Println("---------------------------------------------------------------------------")
 	}
 	//fmt.Println(hostsSlice)
 	//panic("dddddddddddddddddddd")
+	*/
 
 	for _, comm := range comms {
 		for _, h := range hst {
+			
 			fmt.Println("h.ip = "+h.ip+" h.commm = ", h.community, " Descr = "+h.Descr)
 			if h.community == "" || (h.community != "" && h.Descr == "") {
 				gosnmp.Default.Target = h.ip
@@ -100,7 +103,7 @@ func main() {
 					case gosnmp.OctetString:
 						fmt.Printf("string: %s\n", string(variable.Value.([]byte)))
 						if h.community == "" {
-							_, err := db.Exec("UPDATE communities set community=\"" + comm + "\"where ip=\"" + h.ip + "\"")
+							_, err := db.Exec("UPDATE communities set community=\"" + comm + "\"where ip = \"" + h.ip + "\"")
 							h.community = comm
 							fmt.Println("updating community ip: ",h.ip," community: ",h.community)
 							//panic("wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww")
