@@ -78,8 +78,8 @@ func main() {
 					gosnmp.Default.Community = h.community
 				}
 
-				gosnmp.Default.Timeout = 290000000
-				gosnmp.Default.Retries = 2
+				gosnmp.Default.Timeout = 390000000
+				gosnmp.Default.Retries = 4
 				err := gosnmp.Default.Connect()
 				if err != nil {
 					fmt.Print("host:=", h.ip, " ")
