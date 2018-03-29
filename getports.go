@@ -23,13 +23,12 @@ import (
  iface duplex 1.3.6.1.2.1.10.7.2.1.19   3-full 2-half 1-down/auto
  ifname       1.3.6.1.2.1.31.1.1.1.1
  operstatus   1.3.6.1.2.1.2.2.1.8     1 up 2 do
-
- /////////////// risecom  //////////////
+/////////////// risecom  //////////////
   
- iface duplex 1.3.6.1.2.1.10.7.2.1.19.
+iface duplex 1.3.6.1.2.1.10.7.2.1.19.
  iface spedd  1.3.6.1.2.1.31.1.1.1.15
   fname       1.3.6.1.2.1.31.1.1.1.1
-operstatus   1.3.6.1.2.1.2.2.1.8     1 up 2 do
+ operstatus   1.3.6.1.2.1.2.2.1.8     1 up 2 do
 
 /////////// Eltex MES    ////////////////////
 iface speed   1.3.6.1.2.1.31.1.1.1.15
@@ -49,15 +48,15 @@ iface speed   1.3.6.1.2.1.31.1.1.1.15
 ///// DLINK DES 3526 ///////////////////
 port state   1.3.6.1.4.1.171.11.64.1.2.4.4.1.6
   other(0),
-empty(1),
-link-down(2),
-half-10Mbps(3),
-full-10Mbps(4),
-half-100Mbps(5),
-full-100Mbps(6),
-half-1Gigabps(7),
-full-1Gigabps(8),
-full-10Gigabps(9)
+ empty(1),
+ link-down(2),
+ half-10Mbps(3),
+ full-10Mbps(4),
+ half-100Mbps(5),
+ full-100Mbps(6),
+ half-1Gigabps(7),
+ full-1Gigabps(8),
+ full-10Gigabps(9)
 
 ////  DLINK sysDescr = "DES-3200-28" ///
 iface speed   1.3.6.1.2.1.31.1.1.1.15
@@ -73,37 +72,36 @@ example out iso.3.6.1.4.1.171.11.113.1.3.2.2.1.1.5.6.100 = INTEGER: 5
 
 
 .1.3.6.1.4.1.171.11.113.1.3.2.2.1.1.5
-empty(1),
-link-down(2),
-half-10Mbps(3),
-full-10Mbps(4),
-half-100Mbps(5),
-full-100Mbps(6),
-half-1Gigabps(7),
-full-1Gigabps(8),
-full-10Gigabps(9)
+ empty(1),
+ link-down(2),
+ half-10Mbps(3),
+ full-10Mbps(4),
+ half-100Mbps(5),
+ full-100Mbps(6),
+ half-1Gigabps(7),
+ full-1Gigabps(8),
+ full-10Gigabps(9)
 
 
 ///// Dlink sysDescr="D-Link DES-3028" ////
 
 .1.3.6.1.4.1.171.11.63.6.2.2.1.1.5
  empty(1),
-link-down(2),
-half-10Mbps(3),
-full-10Mbps(4),
-half-100Mbps(5),
-full-100Mbps(6),
-half-1Gigabps(7),
-full-1Gigabps(8),
-full-10Gigabps(9)
+ link-down(2),
+ half-10Mbps(3),
+ full-10Mbps(4),
+ half-100Mbps(5),
+ full-100Mbps(6),
+ half-1Gigabps(7),
+ full-1Gigabps(8),
+ full-10Gigabps(9)
 
 /// S2328  Huawei
 iface speed   1.3.6.1.2.1.31.1.1.1.15
  iface duplex 1.3.6.1.2.1.10.7.2.1.19.   2-half/down 3 full
   fname       1.3.6.1.2.1.31.1.1.1.1
-  operstatus   1.3.6.1.2.1.2.2.1.8     1 up 2 do
-
-phy port count from 5, 5 is ethernet 0/0/1, 6 is ethernet 0/0/2 etc
+  operstatus   1.3.6.1.2.1.2.2.1.8     1 up 2 down
+ phy port count from 5, 5 is ethernet 0/0/1, 6 is ethernet 0/0/2 etc
 
 
 
