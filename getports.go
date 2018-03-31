@@ -134,43 +134,6 @@ type Interfaces struct {
 	InterfacesSpeed  uint64
 	InterfacesStatus uint64
 }
-func getIfStatusDlink (b byte) string {
-	s:=""
-	switch b {
-	case 1: 
-		s = "Empty"
-	case 2:
-		s = "LinkDown"
-	case 3:
-		s = "half-10Mbps"
-	case 4:
-		s = "full-10Mbps"
-	case 5:
-		s = "half-100Mbps"
-	case 6:
-		s = "full-100Mbps"
-	case 7:
-		s = "half-1Gigabps"
-	case 8:
-		s = "full-1Gigabps"
-	default:
-		s=""
-	}
-	return s
-}
-func printValue(pdu g.SnmpPDU) error {
-	fmt.Printf("%s = ", pdu.Name)
-
-	switch pdu.Type {
-	case g.OctetString:
-		b := pdu.Value.([]byte)
-		fmt.Printf("STRING: %s\n", string(b))
-	default:
-		fmt.Printf("TYPE %d: %d\n", pdu.Type, g.ToBigInt(pdu.Value))
-	}
-	return nil
-}
-
 func processCisco(ip string, community string) {
 	//fmt.Println("IP: ", h.ip, "  Device model: Cisco")
 	ifs := make([]*Interfaces, 0)
@@ -210,18 +173,6 @@ func processCisco(ip string, community string) {
 		I.InterfacesStatus = g.ToBigInt(r.Value).Uint64()
 		ifs = append(ifs, I)
 		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
-		/*
-			if ifs[i].InterfacesDuplex == 3 {
-				duplex = "FULL"
-			}
-			if ifs[i].InterfacesDuplex == 2 {
-				duplex = "HALF"
-			}
-			if ifs[i].InterfacesDuplex == 1 {
-				duplex = "UNK"
-			}
-		*/
-		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 		i++
 	}
 
@@ -448,7 +399,120 @@ func processDES3028(ip string , community string) {
 	}
 
 }
+func processStandart(ip string, community string) {
+	ifs := make([]*Interfaces, 0)
+	g.Default.Community = community
+	g.Default.Target = ip
+	g.Default.Timeout = 5000000000
+	g.Default.Retries = 5
+	err := g.Default.Connect()
+	//var ifindex []int16  = 0
+	if err != nil {
+		fmt.Print("host:=", ip, " ")
+		log.Println("Connect() err: ", err)
+	}
+	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
+	if err2 != nil {
+		fmt.Printf("Walk Error: %v\n", err)
+		os.Exit(1)
+	}
+	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
+	if err3 != nil {
+		fmt.Printf("Walk Error: %v\n", err)
+		os.Exit(1)
+	}
+	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
+	if err4 != nil {
+		fmt.Printf("Walk Error: %v\n", err)
+		os.Exit(1)
+	}
+	resultName, err4 := g.Default.BulkWalkAll(ifName)
+	if err4 != nil {
+		fmt.Printf("Walk Error: %v\n", err)
+		os.Exit(1)
+	}
 
+	// get duplex
+	i := 0
+	arrifindex := strings.Split(resultDuplex[0].Name, ".")
+
+	startIfindex, _ := strconv.Atoi(arrifindex[12])
+	for _, r := range resultDuplex {
+		I := new(Interfaces)
+		I.InterfacesStatus = g.ToBigInt(r.Value).Uint64()
+		ifs = append(ifs, I)
+		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
+		i++
+
+		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
+
+	}
+	endIfindex := startIfindex + len(ifs) -1
+	//fmt.Println("Start index: ", startIfindex, "  End ifindex: ", endIfindex)
+	// get oper status of port
+	i = 0
+	for _, r := range resultOperStatus {
+		aoid := strings.Split(r.Name, ".")
+		ifindex, err := strconv.Atoi(aoid[11])
+		if err != nil {
+			panic("error string conv")
+		}
+		if ifindex >= startIfindex && ifindex <= endIfindex {
+			ifs[i].InterfacesStatus = g.ToBigInt(r.Value).Uint64()
+			i++
+		} else {
+			continue
+		}
+
+	}
+	// get if name
+	i = 0
+	for _, r := range resultName {
+		aoid := strings.Split(r.Name, ".")
+		ifindex, err := strconv.Atoi(aoid[12])
+		if err != nil {
+			panic("error string conv")
+		}
+		if ifindex >= startIfindex && ifindex <= endIfindex {
+			ifs[i].InterfacesName = string(r.Value.([]byte))
+
+			//fmt.Println("I: ", i, "  Value: ", string(r.Value.([]byte)))
+			i++
+		} else {
+			continue
+		}
+	}
+	// get speed
+	i = 0
+	for _, r := range resultSpeed {
+		aoid := strings.Split(r.Name, ".")
+		ifindex, err := strconv.Atoi(aoid[12])
+		if err != nil {
+			panic("error string conv")
+		}
+		if ifindex >= startIfindex && ifindex <= endIfindex {
+			ifs[i].InterfacesSpeed = g.ToBigInt(r.Value).Uint64()
+			i++
+		} else {
+			continue
+		}
+	}
+	//fmt.Println(ifs)
+	for _, r := range ifs {
+		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
+			duplex := "UNK"
+			if r.InterfacesDuplex == 2 {
+				duplex = "HALF"
+			}
+			if r.InterfacesDuplex == 3 {
+				duplex = "FULL"
+			}
+			fmt.Println("IP: ", ip, " IF: ", r.InterfacesName, "  DUPLEX/SPEED", duplex, "/", r.InterfacesSpeed)
+
+		}
+	}
+	//panic("STOP")
+}
 
 func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
@@ -473,14 +537,14 @@ func main() {
 	for _, h := range hst {
 		if h.community != "" {
 			if desc.Contains(h.Descr, "Cisco") {
-				processCisco(h.ip, h.community)
-
+				//processCisco(h.ip, h.community)
+				processStandart(h.ip,h.community)
 			}
 
 			if desc.Contains(h.Descr, "S2328") {
 
-				processHuaweiS23(h.ip, h.community)
-
+				//processHuaweiS23(h.ip, h.community)
+				processStandart(h.ip,h.community)
 			}
 
 			if desc.Contains(h.Descr, "DES-3028") {
