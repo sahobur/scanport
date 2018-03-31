@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 
 	//"github.com/derekparker/delve/pkg/config"
 	//"bytes"
@@ -121,6 +120,7 @@ var ifOperStatus string = "1.3.6.1.2.1.2.2.1.8"
 var ifSpeed string = "1.3.6.1.2.1.31.1.1.1.15"
 var ifDuplex string = "1.3.6.1.2.1.10.7.2.1.19"
 var ifName string = "1.3.6.1.2.1.31.1.1.1.1"
+var ifStatusDlink3028 string  = "1.3.6.1.4.1.171.11.63.6.2.2.1.1.5"
 
 type Hosts struct {
 	id        int16
@@ -128,14 +128,36 @@ type Hosts struct {
 	community string
 	Descr     string
 }
-
 type Interfaces struct {
 	InterfacesName   string
 	InterfacesDuplex uint64
 	InterfacesSpeed  uint64
 	InterfacesStatus uint64
 }
-
+func getIfStatusDlink (b byte) string {
+	s:=""
+	switch b {
+	case 1: 
+		s = "Empty"
+	case 2:
+		s = "LinkDown"
+	case 3:
+		s = "half-10Mbps"
+	case 4:
+		s = "full-10Mbps"
+	case 5:
+		s = "half-100Mbps"
+	case 6:
+		s = "full-100Mbps"
+	case 7:
+		s = "half-1Gigabps"
+	case 8:
+		s = "full-1Gigabps"
+	default:
+		s=""
+	}
+	return s
+}
 func printValue(pdu g.SnmpPDU) error {
 	fmt.Printf("%s = ", pdu.Name)
 
@@ -257,7 +279,7 @@ func processCisco(ip string, community string) {
 	//fmt.Println(ifs)
 	for _, r := range ifs {
 		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
-			fmt.Println("IP: ",ip," IF: ",r.InterfacesName, " STATUS: ", r.InterfacesStatus, "  DUPLEX/SPEED", r.InterfacesDuplex, "/", r.InterfacesSpeed)
+			fmt.Println("IP: ", ip, " IF: ", r.InterfacesName, " STATUS: ", r.InterfacesStatus, "  DUPLEX/SPEED", r.InterfacesDuplex, "/", r.InterfacesSpeed)
 		}
 	}
 	//panic("STOP")
@@ -306,9 +328,7 @@ func processHuaweiS23(ip string, community string) {
 		ifs = append(ifs, I)
 		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
 		i++
-		
-			
-		
+
 		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 
 	}
@@ -368,17 +388,67 @@ func processHuaweiS23(ip string, community string) {
 	//fmt.Println(ifs)
 	for _, r := range ifs {
 		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
-			duplex:="UNK"
-			if r.InterfacesDuplex==2 {duplex="HALF"}
-			if r.InterfacesDuplex==3 {duplex="FULL"}
-			fmt.Println("IP: ",ip," IF: ",r.InterfacesName, "  DUPLEX/SPEED", duplex, "/", r.InterfacesSpeed)
-			
+			duplex := "UNK"
+			if r.InterfacesDuplex == 2 {
+				duplex = "HALF"
+			}
+			if r.InterfacesDuplex == 3 {
+				duplex = "FULL"
+			}
+			fmt.Println("IP: ", ip, " IF: ", r.InterfacesName, "  DUPLEX/SPEED", duplex, "/", r.InterfacesSpeed)
+
 		}
 	}
 	//panic("STOP")
 }
+func processDES3028(ip string , community string) {
+	fmt.Println("IP: ",ip,"  DLINK 3028  ")
+	g.Default.Community = community
+	g.Default.Target = ip
+	g.Default.Timeout = 5000000000
+	g.Default.Retries = 5
+	err := g.Default.Connect()
+	if err != nil {
+		fmt.Print("host:=", ip, " ")
+		log.Println("Connect() err: ", err)
+	}
+	resultOperStatus, err2 := g.Default.BulkWalkAll(ifStatusDlink3028)
+	if err2 != nil {
+		fmt.Printf("Walk Error: %v\n", err)
+		os.Exit(1)
+	}
 
-var wg sync.WaitGroup
+	for _, r := range resultOperStatus {
+		aoid := strings.Split(r.Name, ".")
+		ifindex, err := strconv.Atoi(aoid[16])
+		if err != nil {
+			panic("error string conv")
+		}
+		portstate := g.ToBigInt(r.Value).Uint64()
+
+		if portstate == 2 || portstate == 3 || portstate == 4 {
+			switch portstate {
+				//2 10h
+				//3 10f
+				//4 100h
+				// 5 100f
+			case 2:
+				fmt.Println("IP: ", ip, " IF: ", ifindex, "  DUPLEX/SPEED  HALF / 10")
+			case 3:
+				fmt.Println("IP: ", ip, " IF: ", ifindex, "  DUPLEX/SPEED  FULL / 10")
+			case 4:
+				fmt.Println("IP: ", ip, " IF: ", ifindex, "  DUPLEX/SPEED  HALF / 100")
+			}
+
+		}
+		//fmt.Println("Port: ",ifindex,"  State: ",r.Value)
+		
+		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
+
+	}
+
+}
+
 
 func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
@@ -406,16 +476,18 @@ func main() {
 				processCisco(h.ip, h.community)
 
 			}
-			
+
 			if desc.Contains(h.Descr, "S2328") {
 
-				 processHuaweiS23(h.ip, h.community)
+				processHuaweiS23(h.ip, h.community)
 
 			}
+
+			if desc.Contains(h.Descr, "DES-3028") {
+				processDES3028(h.ip,h.community)
+			}
+
 			/*
-				if desc.Contains(h.Descr, "DES-3028") {
-					fmt.Println("IP: ", h.ip, "  Device model: Dlink DES-3028")
-				}
 				if desc.Contains(h.Descr, "DES-3200-10") {
 					fmt.Println("IP: ", h.ip, "  Device model: DES-3200-10")
 				}
@@ -503,5 +575,4 @@ func main() {
 			*/
 		}
 	}
-	wg.Wait()
 }
