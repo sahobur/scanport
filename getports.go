@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	//"github.com/derekparker/delve/pkg/config"
 	//"bytes"
@@ -149,6 +150,7 @@ func printValue(pdu g.SnmpPDU) error {
 }
 
 func processCisco(ip string, community string) {
+	//fmt.Println("IP: ", h.ip, "  Device model: Cisco")
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
@@ -187,77 +189,85 @@ func processCisco(ip string, community string) {
 		ifs = append(ifs, I)
 		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
 		/*
-		if ifs[i].InterfacesDuplex == 3 {
-			duplex = "FULL"
-		}
-		if ifs[i].InterfacesDuplex == 2 {
-			duplex = "HALF"
-		}
-		if ifs[i].InterfacesDuplex == 1 {
-			duplex = "UNK"
-		}
+			if ifs[i].InterfacesDuplex == 3 {
+				duplex = "FULL"
+			}
+			if ifs[i].InterfacesDuplex == 2 {
+				duplex = "HALF"
+			}
+			if ifs[i].InterfacesDuplex == 1 {
+				duplex = "UNK"
+			}
 		*/
 		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 		i++
 	}
 
 	// get oper status of port
-	i:=0
+	i := 0
 	for _, r := range resultOperStatus {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[11])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 9999 && ifindex<10400{
+		if ifindex > 9999 && ifindex < 10400 {
 			//fmt.Println(ifindex)
 			ifs[i].InterfacesStatus = g.ToBigInt(r.Value).Uint64()
 			i++
-		}else {continue}
+		} else {
+			continue
+		}
 
 	}
 	// get if name
-	i=0
+	i = 0
 	for _, r := range resultName {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 9999 && ifindex<10400{
+		if ifindex > 9999 && ifindex < 10400 {
 			ifs[i].InterfacesName = string(r.Value.([]byte))
 
 			//fmt.Println("I: ", i, "  Value: ", string(r.Value.([]byte)))
 			i++
-		} else {continue}
+		} else {
+			continue
+		}
 	}
 	// get speed
-	i=0
+	i = 0
 	for _, r := range resultSpeed {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 9999 && ifindex<10400{
+		if ifindex > 9999 && ifindex < 10400 {
 			//fmt.Println("speed:")
 			ifs[i].InterfacesSpeed = g.ToBigInt(r.Value).Uint64()
 			//fmt.Println("Name OID: ", r.Name, "  Value: ", r.Value)
 			i++
-		} else {continue}
+		} else {
+			continue
+		}
 	}
-  //fmt.Println(ifs)
-  for _,r := range ifs {
-	  if r.InterfacesStatus==1&& (r.InterfacesDuplex==2 || r.InterfacesSpeed==10){
-	  fmt.Println(r.InterfacesName," STATUS:  ",r.InterfacesStatus,"  DUPLEX/SPEED",r.InterfacesDuplex,"/",r.InterfacesSpeed)
-	  }
-  }
-  //panic("STOP")
+	//fmt.Println(ifs)
+	for _, r := range ifs {
+		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
+			fmt.Println("IP: ",ip," IF: ",r.InterfacesName, " STATUS: ", r.InterfacesStatus, "  DUPLEX/SPEED", r.InterfacesDuplex, "/", r.InterfacesSpeed)
+		}
+	}
+	//panic("STOP")
 }
 func processHuaweiS23(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
+	g.Default.Timeout = 5000000000
+	g.Default.Retries = 5
 	err := g.Default.Connect()
 	//var ifindex []int16  = 0
 	if err != nil {
@@ -286,80 +296,89 @@ func processHuaweiS23(ip string, community string) {
 	}
 
 	// get duplex
+	i := 0
+	arrifindex := strings.Split(resultDuplex[0].Name, ".")
 
-	for i, r := range resultDuplex {
+	startIfindex, _ := strconv.Atoi(arrifindex[12])
+	for _, r := range resultDuplex {
 		I := new(Interfaces)
 		I.InterfacesStatus = g.ToBigInt(r.Value).Uint64()
 		ifs = append(ifs, I)
 		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
-		/*
-		if ifs[i].InterfacesDuplex == 3 {
-			duplex = "FULL"
-		}
-		if ifs[i].InterfacesDuplex == 2 {
-			duplex = "HALF"
-		}
-		if ifs[i].InterfacesDuplex == 1 {
-			duplex = "UNK"
-		}
-		*/
-		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 		i++
-	}
+		
+			
+		
+		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 
+	}
+	endIfindex := len(ifs)
+	//fmt.Println("Start index: ", startIfindex, "  End ifindex: ", endIfindex)
+	//ints:=i
 	// get oper status of port
-	i:=0
+	i = 0
 	for _, r := range resultOperStatus {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[11])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 5 && ifindex<40{
-			//fmt.Println(ifindex)
+		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesStatus = g.ToBigInt(r.Value).Uint64()
 			i++
-		}else {continue}
+		} else {
+			continue
+		}
 
 	}
 	// get if name
-	i=0
+	i = 0
 	for _, r := range resultName {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 9999 && ifindex<10400{
+		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesName = string(r.Value.([]byte))
 
 			//fmt.Println("I: ", i, "  Value: ", string(r.Value.([]byte)))
 			i++
-		} else {continue}
+		} else {
+			continue
+		}
 	}
 	// get speed
-	i=0
+	i = 0
 	for _, r := range resultSpeed {
 		aoid := strings.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
 		}
-		if ifindex > 9999 && ifindex<10400{
+		if ifindex >= startIfindex && ifindex <= endIfindex {
 			//fmt.Println("speed:")
 			ifs[i].InterfacesSpeed = g.ToBigInt(r.Value).Uint64()
 			//fmt.Println("Name OID: ", r.Name, "  Value: ", r.Value)
 			i++
-		} else {continue}
+		} else {
+			continue
+		}
 	}
-  //fmt.Println(ifs)
-  for _,r := range ifs {
-	  if r.InterfacesStatus==1&& (r.InterfacesDuplex==2 || r.InterfacesSpeed==10){
-	  fmt.Println(r.InterfacesName," STATUS:  ",r.InterfacesStatus,"  DUPLEX/SPEED",r.InterfacesDuplex,"/",r.InterfacesSpeed)
-	  }
-  }
-  //panic("STOP")
+	//fmt.Println(ifs)
+	for _, r := range ifs {
+		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
+			duplex:="UNK"
+			if r.InterfacesDuplex==2 {duplex="HALF"}
+			if r.InterfacesDuplex==3 {duplex="FULL"}
+			fmt.Println("IP: ",ip," IF: ",r.InterfacesName, "  DUPLEX/SPEED", duplex, "/", r.InterfacesSpeed)
+			
+		}
+	}
+	//panic("STOP")
 }
+
+var wg sync.WaitGroup
 
 func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
@@ -380,16 +399,17 @@ func main() {
 	if err = rows.Err(); err != nil {
 		log.Fatal(err)
 	}
+
 	for _, h := range hst {
 		if h.community != "" {
 			if desc.Contains(h.Descr, "Cisco") {
-				fmt.Println("IP: ", h.ip, "  Device model: Cisco")
 				processCisco(h.ip, h.community)
 
 			}
+			
 			if desc.Contains(h.Descr, "S2328") {
-				fmt.Println("IP: ", h.ip, "  Device model: S2328P-EI-AC")
-				processHuaweiS23(h.ip,h.community)
+
+				 processHuaweiS23(h.ip, h.community)
 
 			}
 			/*
@@ -464,7 +484,7 @@ func main() {
 					fmt.Println("IP: ", h.ip, "  Device model: Risecom ROS 28 port")
 
 				}
-				
+
 				if desc.Contains(h.Descr, "SNR-S2940") {
 					fmt.Println("IP: ", h.ip, "  Device model: SNR-S2940")
 
@@ -483,4 +503,5 @@ func main() {
 			*/
 		}
 	}
+	wg.Wait()
 }
