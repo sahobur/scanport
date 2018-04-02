@@ -57,7 +57,7 @@ func processCisco(ip string, community string) {
 	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
 	if err2 != nil {
 		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		return
 	}
 	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
 	if err3 != nil {
@@ -282,8 +282,9 @@ func processSpecDlink(ip string, community string, model string) {
 	}
 	resultOperStatus, err2 := g.Default.BulkWalkAll(oidd)
 	if err2 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifOperstate): %v\n", err3)
+		log.Println(" --ip: ",ip," community: ",community)
+		return
 	}
 	if model == "3028" {
 		for _, r := range resultOperStatus {
@@ -371,18 +372,20 @@ func processStandart(ip string, community string) {
 	if err3 != nil {
 		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
 		log.Println(" --ip: ",ip," community: ",community)
-	
+		return
 	}
 	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
 		log.Println(" --ip: ",ip," community: ",community)
+		return
 	
 	}
 	resultName, err5 := g.Default.BulkWalkAll(ifName)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifName): %v\n", err5)
 		log.Println(" --ip: ",ip," community: ",community)
+		return
 	}
 
 	// get duplex
