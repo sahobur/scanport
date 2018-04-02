@@ -241,7 +241,7 @@ func processHuaweiS23(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 5000000000
+	g.Default.Timeout = 9000000000
 	g.Default.Retries = 5
 	err := g.Default.Connect()
 	//var ifindex []int16  = 0
@@ -251,23 +251,24 @@ func processHuaweiS23(ip string, community string) {
 	}
 	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
 	if err2 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(OperStatus): %v\n", err2)
+		log.Println(" --ip: ",ip," community: ",community)
+		return
 	}
 	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
 	if err3 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
+		log.Println(" --ip: ",ip," community: ",community)
 	}
 	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
 	if err4 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
+		log.Println(" --ip: ",ip," community: ",community)
 	}
-	resultName, err4 := g.Default.BulkWalkAll(ifName)
+	resultName, err5 := g.Default.BulkWalkAll(ifName)
 	if err4 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifName): %v\n", err5)
+		log.Println(" --ip: ",ip," community: ",community)
 	}
 
 	// get duplex
@@ -358,7 +359,7 @@ func processSpecDlink(ip string, community string, model string) {
 	//fmt.Println("IP: ",ip,"  DLINK 3028  ")
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 5000000000
+	g.Default.Timeout = 9000000000
 	g.Default.Retries = 5
 	err := g.Default.Connect()
 	if err != nil {
@@ -443,9 +444,10 @@ func processStandart(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 90000900000
-	g.Default.Retries = 5
-	g.Default.MaxRepetitions = 44
+	g.Default.Timeout = 100000000000
+	g.Default.Retries = 4
+	g.Default.MaxRepetitions = 20
+	
 	err := g.Default.Connect()
 	//var ifindex []int16  = 0
 	if err != nil {
@@ -454,29 +456,31 @@ func processStandart(ip string, community string) {
 	}
 	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
 	if err2 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(Operstatus): %v\n", err2)
+		log.Println(" --ip: ",ip," community: ",community)
+		return
 	}
 	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
 	if err3 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
+		log.Println(" --ip: ",ip," community: ",community)
+	
 	}
 	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
 	if err4 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
+		log.Println(" --ip: ",ip," community: ",community)
+	
 	}
-	resultName, err4 := g.Default.BulkWalkAll(ifName)
+	resultName, err5 := g.Default.BulkWalkAll(ifName)
 	if err4 != nil {
-		fmt.Printf("Walk Error: %v\n", err)
-		os.Exit(1)
+		fmt.Printf("Walk Error(ifName): %v\n", err5)
+		log.Println(" --ip: ",ip," community: ",community)
 	}
 
 	// get duplex
 	i := 0
 	arrifindex := strings.Split(resultDuplex[0].Name, ".")
-
 	startIfindex, _ := strconv.Atoi(arrifindex[12])
 	for _, r := range resultDuplex {
 		I := new(Interfaces)
@@ -489,7 +493,10 @@ func processStandart(ip string, community string) {
 
 	}
 	endIfindex := startIfindex + len(ifs) - 1
-	//fmt.Println("Start index: ", startIfindex, "  End ifindex: ", endIfindex)
+	
+	
+	//fmt.Println("func standart, ip: ",ip," Start index: ", startIfindex, "  End ifindex: ", endIfindex)
+
 	// get oper status of port
 	i = 0
 	for _, r := range resultOperStatus {
@@ -557,7 +564,7 @@ func processStandart(ip string, community string) {
 
 func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
-
+//i:=1
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
 	defer db.Close()
 	rows, err := db.Query("SELECT * from communities")
@@ -576,6 +583,7 @@ func main() {
 	}
 
 	for _, h := range hst {
+		//fmt.Println("Hosts processed:",i,"Host ",h.ip," community ",h.community," Sysdesc ",h.Descr)
 		if h.community != "" {
 			if desc.Contains(h.Descr, "Cisco") {
 				//processCisco(h.ip, h.community)
@@ -706,7 +714,7 @@ func main() {
 				if h.Descr == "" {
 					fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
 				}
-			
+			//i++
 		}
 	}
 	fmt.Println("Done.")
