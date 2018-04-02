@@ -351,7 +351,7 @@ func processStandart(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 100000000000
+	g.Default.Timeout = 10000000000
 	g.Default.Retries = 4
 	g.Default.MaxRepetitions = 20
 	
