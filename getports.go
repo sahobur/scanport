@@ -282,7 +282,7 @@ func processSpecDlink(ip string, community string, model string) {
 	}
 	resultOperStatus, err2 := g.Default.BulkWalkAll(oidd)
 	if err2 != nil {
-		fmt.Printf("Walk Error(ifOperstate): %v\n", err3)
+		fmt.Printf("Walk Error(ifOperstate): %v\n", err2)
 		log.Println(" --ip: ",ip," community: ",community)
 		return
 	}
