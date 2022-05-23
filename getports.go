@@ -9,6 +9,7 @@ import (
 	//"bytes"
 	"database/sql"
 	"log"
+
 	//"os/exec"
 	//"strings"
 	//"math/big"
@@ -18,10 +19,10 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	g "github.com/soniah/gosnmp"
+
 	//"io/ioutil"
 	desc "strings"
 )
-
 
 var ifOperStatus string = "1.3.6.1.2.1.2.2.1.8"
 var ifSpeed string = "1.3.6.1.2.1.31.1.1.1.15"
@@ -159,23 +160,23 @@ func processHuaweiS23(ip string, community string) {
 	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
 	if err2 != nil {
 		fmt.Printf("Walk Error(OperStatus): %v\n", err2)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
 	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
 	if err3 != nil {
 		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 	}
 	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 	}
 	resultName, err5 := g.Default.BulkWalkAll(ifName)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifName): %v\n", err5)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 	}
 
 	// get duplex
@@ -283,7 +284,7 @@ func processSpecDlink(ip string, community string, model string) {
 	resultOperStatus, err2 := g.Default.BulkWalkAll(oidd)
 	if err2 != nil {
 		fmt.Printf("Walk Error(ifOperstate): %v\n", err2)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
 	if model == "3028" {
@@ -355,7 +356,7 @@ func processStandart(ip string, community string) {
 	g.Default.Timeout = 10000000000
 	g.Default.Retries = 4
 	g.Default.MaxRepetitions = 20
-	
+
 	err := g.Default.Connect()
 	//var ifindex []int16  = 0
 	if err != nil {
@@ -365,26 +366,26 @@ func processStandart(ip string, community string) {
 	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
 	if err2 != nil {
 		fmt.Printf("Walk Error(Operstatus): %v\n", err2)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
 	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
 	if err3 != nil {
 		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
 	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
-	
+
 	}
 	resultName, err5 := g.Default.BulkWalkAll(ifName)
 	if err4 != nil {
 		fmt.Printf("Walk Error(ifName): %v\n", err5)
-		log.Println(" --ip: ",ip," community: ",community)
+		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
 
@@ -403,8 +404,7 @@ func processStandart(ip string, community string) {
 
 	}
 	endIfindex := startIfindex + len(ifs) - 1
-	
-	
+
 	//fmt.Println("func standart, ip: ",ip," Start index: ", startIfindex, "  End ifindex: ", endIfindex)
 
 	// get oper status of port
@@ -474,7 +474,7 @@ func processStandart(ip string, community string) {
 
 func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
-//i:=1
+	//i:=1
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
 	defer db.Close()
 	rows, err := db.Query("SELECT * from communities")
@@ -538,92 +538,92 @@ func main() {
 				//fmt.Println("IP: ", h.ip, "  Device model: DES-3526")
 				processSpecDlink(h.ip, h.community, "3526")
 			}
-			
-				if desc.Contains(h.Descr, "DGS-3120-24SC") {
+
+			if desc.Contains(h.Descr, "DGS-3120-24SC") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: DGS-3120-24SC")
-					processStandart(h.ip,h.community)
-				}
-				if desc.Contains(h.Descr, "DGS-3700-12G") {
+				processStandart(h.ip, h.community)
+			}
+			if desc.Contains(h.Descr, "DGS-3700-12G") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: DGS-3700-12G")
-					processStandart(h.ip,h.community)
-				}
-				
-				if desc.Contains(h.Descr, "ES-2024A") {
+				processStandart(h.ip, h.community)
+			}
+
+			if desc.Contains(h.Descr, "ES-2024A") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: Zyxel ES-2024A")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				
-				if desc.Contains(h.Descr, "ES-3124") {
-					//fmt.Println("IP: ", h.ip, "  Device model: Zyxel ES-3124")
-					processStandart(h.ip,h.community)
-				}
-				
-				if desc.Contains(h.Descr, "ES-3148") {
+			}
+
+			if desc.Contains(h.Descr, "ES-3124") {
+				//fmt.Println("IP: ", h.ip, "  Device model: Zyxel ES-3124")
+				processStandart(h.ip, h.community)
+			}
+
+			if desc.Contains(h.Descr, "ES-3148") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: Zyxel ES-3148")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				
-				if desc.Contains(h.Descr, "ISCOM2110") {
+			}
+
+			if desc.Contains(h.Descr, "ISCOM2110") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: ISCOM2110")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "ISCOM2128") {
+			}
+			if desc.Contains(h.Descr, "ISCOM2128") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: ISCOM2128")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "MES-1024") {
+			}
+			if desc.Contains(h.Descr, "MES-1024") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: MES-1024 v < 1.1.30")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "MES-1124") || desc.Contains(h.Descr, "MES1124") {
+			}
+			if desc.Contains(h.Descr, "MES-1124") || desc.Contains(h.Descr, "MES1124") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: MES-1124")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "MES-2124") || desc.Contains(h.Descr, "MES2124") {
+			}
+			if desc.Contains(h.Descr, "MES-2124") || desc.Contains(h.Descr, "MES2124") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: MES-2124")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "MES1024") {
+			}
+			if desc.Contains(h.Descr, "MES1024") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: MES-1024 version > 1.1.30")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "MES3124") {
+			}
+			if desc.Contains(h.Descr, "MES3124") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: MES 3124")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "ROS") {
+			}
+			if desc.Contains(h.Descr, "ROS") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: Risecom ROS 28 port")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
+			}
 
-				if desc.Contains(h.Descr, "SNR-S2940") {
+			if desc.Contains(h.Descr, "SNR-S2940") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: SNR-S2940")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "SNR-S2950-24G") {
+			}
+			if desc.Contains(h.Descr, "SNR-S2950-24G") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: SNR-S2950-24G")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if desc.Contains(h.Descr, "SNR-S2960-24G") {
+			}
+			if desc.Contains(h.Descr, "SNR-S2960-24G") {
 				//	fmt.Println("IP: ", h.ip, "  Device model: SNR-S2960-24G")
-					processStandart(h.ip,h.community)
+				processStandart(h.ip, h.community)
 
-				}
-				if h.Descr == "" {
-					fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
-				}
+			}
+			if h.Descr == "" {
+				fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
+			}
 			//i++
 		}
 	}
