@@ -4,21 +4,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	//"github.com/derekparker/delve/pkg/config"
-	//"bytes"
 	"database/sql"
 	"log"
-
-	//"os/exec"
-	//"strings"
-	//"math/big"
-
-	//"github.com/BurntSushi/toml"
 	"os"
-
 	_ "github.com/go-sql-driver/mysql"
-	g "github.com/soniah/gosnmp"
+	g "github.com/gosnmp/gosnmp"
 
 	//"io/ioutil"
 	desc "strings"
