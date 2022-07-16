@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	//"github.com/derekparker/delve/pkg/config"
 	//"bytes"
 	"database/sql"
 	"log"
+
 	//"os/exec"
 	//"strings"
 	//"math/big"
@@ -18,9 +20,12 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	g "github.com/gosnmp/gosnmp"
+
 	//"io/ioutil"
 	desc "strings"
 )
+
+const snmptimeout time.Duration = 1000000
 
 // OIDs describes wthernet port
 const (
@@ -52,7 +57,7 @@ func processSpecDlink(ip string, community string, model string) {
 	//fmt.Println("IP: ",ip,"  DLINK 3028  ")
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 9000000000
+	g.Default.Timeout = snmptimeout
 	g.Default.Retries = 5
 	err := g.Default.Connect()
 	if err != nil {
@@ -96,9 +101,6 @@ func processSpecDlink(ip string, community string, model string) {
 				}
 
 			}
-			//fmt.Println("Port: ",ifindex,"  State: ",r.Value)
-
-			//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 
 		}
 	}
@@ -138,7 +140,7 @@ func processStandart(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
-	g.Default.Timeout = 10000000000
+	g.Default.Timeout = snmptimeout
 	g.Default.Retries = 4
 	g.Default.MaxRepetitions = 20
 
@@ -257,9 +259,9 @@ func processStandart(ip string, community string) {
 
 }
 
+//func getDevices() 
 func main() {
-	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
-	//i:=1
+
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
 	if err != nil {
 		log.Fatal(err)
@@ -302,18 +304,14 @@ func main() {
 
 			}
 
-			if desc.Contains(h.Descr, "DES-3028") {
+			if desc.Contains(h.Descr, "DES-3028") ||desc.Contains(h.Descr, "DES-3526")  {
 				processSpecDlink(h.ip, h.community, "3028")
-			}
-
-			if desc.Contains(h.Descr, "DES-3526") {
-				processSpecDlink(h.ip, h.community, "3526")
 			}
 
 			if h.Descr == "" {
 				fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
 			}
-			//i++
+			
 		}
 	}
 	fmt.Println("Done.")
