@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	conf "scanport/internal/config"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	//"github.com/BurntSushi/toml"
 	//"os"
 
+	"github.com/go-sql-driver/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	g "github.com/gosnmp/gosnmp"
 
@@ -261,8 +263,17 @@ func processStandart(ip string, community string) {
 
 //func getDevices() 
 func main() {
-
-	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
+	var cfg *conf.Config
+	cfg = conf.GetConfig()
+	//fmt.Printf("%+v",cfg)
+	dbconn := mysql.Config {
+		User: 	cfg.DBuser,
+		Passwd: cfg.DBpass,
+		Net: "tcp",
+		Addr: cfg.DBhost+":"+cfg.DBport,
+		DBName: cfg.Database,
+	}
+	db, err := sql.Open("mysql", dbconn.FormatDSN())
 	if err != nil {
 		log.Fatal(err)
 	}
