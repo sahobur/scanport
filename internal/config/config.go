@@ -1,9 +1,11 @@
 package config
 
 import (
-	"github.com/ilyakaznacheev/cleanenv"
-	"restapi-lesson/pkg/logging"
+	"fmt"
+	"log"
 	"sync"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -29,13 +31,11 @@ var once sync.Once
 
 func GetConfig() *Config {
 	once.Do(func() {
-		logger := logging.GetLogger()
-		logger.Info("read application configuration")
 		instance = &Config{}
 		if err := cleanenv.ReadConfig("config.yml", instance); err != nil {
 			help, _ := cleanenv.GetDescription(instance, nil)
-			logger.Info(help)
-			logger.Fatal(err)
+			fmt.Println(help)
+			log.Fatal(err)
 		}
 	})
 	return instance
