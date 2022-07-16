@@ -4,7 +4,7 @@ import (
 	"fmt"
 	conf "scanport/internal/config"
 	"strconv"
-	"strings"
+	//"strings"
 	"time"
 
 	//"github.com/derekparker/delve/pkg/config"
@@ -20,11 +20,11 @@ import (
 	//"os"
 
 	"github.com/go-sql-driver/mysql"
-	_ "github.com/go-sql-driver/mysql"
+	//"github.com/go-sql-driver/mysql"
 	g "github.com/gosnmp/gosnmp"
 
 	//"io/ioutil"
-	desc "strings"
+	s "strings"
 )
 
 const snmptimeout time.Duration = 1000000
@@ -81,7 +81,7 @@ func processSpecDlink(ip string, community string, model string) {
 	}
 	if model == "3028" {
 		for _, r := range resultOperStatus {
-			aoid := strings.Split(r.Name, ".")
+			aoid := s.Split(r.Name, ".")
 			ifindex, err := strconv.Atoi(aoid[16])
 			if err != nil {
 				panic("error string conv")
@@ -108,7 +108,7 @@ func processSpecDlink(ip string, community string, model string) {
 	}
 	if model == "3526" {
 		for _, r := range resultOperStatus {
-			aoid := strings.Split(r.Name, ".")
+			aoid := s.Split(r.Name, ".")
 			ifindex, err := strconv.Atoi(aoid[16])
 			if err != nil {
 				panic("error string conv")
@@ -180,7 +180,7 @@ func processStandart(ip string, community string) {
 
 	// get duplex
 	i := 0
-	arrifindex := strings.Split(resultDuplex[0].Name, ".")
+	arrifindex := s.Split(resultDuplex[0].Name, ".")
 	startIfindex, _ := strconv.Atoi(arrifindex[12])
 	for _, r := range resultDuplex {
 		I := new(Interfaces)
@@ -199,7 +199,7 @@ func processStandart(ip string, community string) {
 	// get oper status of port
 	i = 0
 	for _, r := range resultOperStatus {
-		aoid := strings.Split(r.Name, ".")
+		aoid := s.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[11])
 		if err != nil {
 			panic("error string conv")
@@ -215,7 +215,7 @@ func processStandart(ip string, community string) {
 	// get if name
 	i = 0
 	for _, r := range resultName {
-		aoid := strings.Split(r.Name, ".")
+		aoid := s.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
@@ -232,7 +232,7 @@ func processStandart(ip string, community string) {
 	// get speed
 	i = 0
 	for _, r := range resultSpeed {
-		aoid := strings.Split(r.Name, ".")
+		aoid := s.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
 			panic("error string conv")
@@ -261,10 +261,9 @@ func processStandart(ip string, community string) {
 
 }
 
-//func getDevices() 
 func main() {
-	var cfg *conf.Config
-	cfg = conf.GetConfig()
+	//var cfg *conf.Config
+	cfg := conf.GetConfig()
 	//fmt.Printf("%+v",cfg)
 	dbconn := mysql.Config {
 		User: 	cfg.DBuser,
@@ -298,24 +297,24 @@ func main() {
 
 	for _, h := range hst {
 		if h.community != "" {
-			if desc.Contains(h.Descr, "Cisco") ||                desc.Contains(h.Descr, "S2328") ||
-				desc.Contains(h.Descr, "DES-3200-10") ||         desc.HasPrefix(h.Descr, "DES-3200-28") ||
-				desc.HasPrefix(h.Descr, "D-Link DES-3200-28") || desc.Contains(h.Descr, "DES-1210-28") ||
-				desc.Contains(h.Descr, "DGS-3120-24SC") ||       desc.Contains(h.Descr, "DGS-3700-12G") ||
-				desc.Contains(h.Descr, "ES-2024A") ||            desc.Contains(h.Descr, "ES-3124") ||
-				desc.Contains(h.Descr, "ES-3148") ||             desc.Contains(h.Descr, "ISCOM2110") ||
-				desc.Contains(h.Descr, "ISCOM2128") ||           desc.Contains(h.Descr, "MES-1024") ||
-				desc.Contains(h.Descr, "MES-1124") ||            desc.Contains(h.Descr, "MES1124") ||
-				desc.Contains(h.Descr, "MES-2124") ||            desc.Contains(h.Descr, "MES2124") ||
-				desc.Contains(h.Descr, "MES1024") ||             desc.Contains(h.Descr, "MES3124") ||
-				desc.Contains(h.Descr, "ROS") ||                 desc.Contains(h.Descr, "SNR-S2940") ||
-				desc.Contains(h.Descr, "SNR-S2950-24G") || desc.Contains(h.Descr, "SNR-S2960-24G") {
+			if s.Contains(h.Descr, "Cisco") ||                s.Contains(h.Descr, "S2328") ||
+				s.Contains(h.Descr, "DES-3200-10") ||         s.HasPrefix(h.Descr, "DES-3200-28") ||
+				s.HasPrefix(h.Descr, "D-Link DES-3200-28") || s.Contains(h.Descr, "DES-1210-28") ||
+				s.Contains(h.Descr, "DGS-3120-24SC") ||       s.Contains(h.Descr, "DGS-3700-12G") ||
+				s.Contains(h.Descr, "ES-2024A") ||            s.Contains(h.Descr, "ES-3124") ||
+				s.Contains(h.Descr, "ES-3148") ||             s.Contains(h.Descr, "ISCOM2110") ||
+				s.Contains(h.Descr, "ISCOM2128") ||           s.Contains(h.Descr, "MES-1024") ||
+				s.Contains(h.Descr, "MES-1124") ||            s.Contains(h.Descr, "MES1124") ||
+				s.Contains(h.Descr, "MES-2124") ||            s.Contains(h.Descr, "MES2124") ||
+				s.Contains(h.Descr, "MES1024") ||             s.Contains(h.Descr, "MES3124") ||
+				s.Contains(h.Descr, "ROS") ||                 s.Contains(h.Descr, "SNR-S2940") ||
+				s.Contains(h.Descr, "SNR-S2950-24G") || s.Contains(h.Descr, "SNR-S2960-24G") {
 
 				processStandart(h.ip, h.community)
 
 			}
 
-			if desc.Contains(h.Descr, "DES-3028") ||desc.Contains(h.Descr, "DES-3526")  {
+			if s.Contains(h.Descr, "DES-3028") ||s.Contains(h.Descr, "DES-3526")  {
 				processSpecDlink(h.ip, h.community, "3028")
 			}
 
