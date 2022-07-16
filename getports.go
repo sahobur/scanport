@@ -17,31 +17,38 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	g "github.com/soniah/gosnmp"
+	g "github.com/gosnmp/gosnmp"
 	//"io/ioutil"
 	desc "strings"
 )
 
+const (
+ ifOperStatus string = "1.3.6.1.2.1.2.2.1.8"
+ ifSpeed string = "1.3.6.1.2.1.31.1.1.1.15"
+ ifDuplex string = "1.3.6.1.2.1.10.7.2.1.19"
+ ifName string = "1.3.6.1.2.1.31.1.1.1.1"
+ ifStatusDlink3028 string = "1.3.6.1.4.1.171.11.63.6.2.2.1.1.5"
+ ifStatusDlink3526 string = "1.3.6.1.4.1.171.11.64.1.2.4.4.1.6"
+)
 
-var ifOperStatus string = "1.3.6.1.2.1.2.2.1.8"
-var ifSpeed string = "1.3.6.1.2.1.31.1.1.1.15"
-var ifDuplex string = "1.3.6.1.2.1.10.7.2.1.19"
-var ifName string = "1.3.6.1.2.1.31.1.1.1.1"
-var ifStatusDlink3028 string = "1.3.6.1.4.1.171.11.63.6.2.2.1.1.5"
-var ifStatusDlink3526 string = "1.3.6.1.4.1.171.11.64.1.2.4.4.1.6"
-
+// Host struct
 type Hosts struct {
-	id        int16
-	ip        string
-	community string
-	Descr     string
+	id        int16     // device id in DB
+	ip        string    // ip address
+	community string    // snmp commmunity string
+	Descr     string    // description
 }
+
+// Ethernet Interface struct
 type Interfaces struct {
-	InterfacesName   string
-	InterfacesDuplex uint64
-	InterfacesSpeed  uint64
-	InterfacesStatus uint64
+	InterfacesName   string    // name
+	InterfacesDuplex uint64    // duplex
+	InterfacesSpeed  uint64    // speed 
+	InterfacesStatus uint64    // state
 }
+
+
+// processCisco() collect port ctste of Cisco devices
 
 func processCisco(ip string, community string) {
 	//fmt.Println("IP: ", h.ip, "  Device model: Cisco")
@@ -476,8 +483,14 @@ func main() {
 	//sysDescr := []string{".1.3.6.1.2.1.1.1.0"}
 //i:=1
 	db, err := sql.Open("mysql", "gonet:gonetpas@tcp(172.16.25.96:3306)/network")
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer db.Close()
 	rows, err := db.Query("SELECT * from communities")
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer rows.Close()
 	hst := make([]*Hosts, 0)
 	for rows.Next() {
