@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 	"log"
-
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -15,8 +13,6 @@ type Config struct {
 	DBuser string `env:"dbuser"`
 	DBpass string `env:"dbpass"`
 }
-
-
 
 var instance *Config
 
