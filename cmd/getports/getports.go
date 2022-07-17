@@ -1,30 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
+	g "github.com/gosnmp/gosnmp"
+	"log"
 	conf "scanport/internal/config"
 	"strconv"
-	//"strings"
-	"time"
-
-	//"github.com/derekparker/delve/pkg/config"
-	//"bytes"
-	"database/sql"
-	"log"
-
-	//"os/exec"
-	//"strings"
-	//"math/big"
-
-	//"github.com/BurntSushi/toml"
-	//"os"
-
-	"github.com/go-sql-driver/mysql"
-	//"github.com/go-sql-driver/mysql"
-	g "github.com/gosnmp/gosnmp"
-
-	//"io/ioutil"
 	s "strings"
+	"time"
 )
 
 const snmptimeout time.Duration = 1000000
@@ -56,7 +41,6 @@ type Interfaces struct {
 }
 
 func processSpecDlink(ip string, community string, model string) {
-	//fmt.Println("IP: ",ip,"  DLINK 3028  ")
 	g.Default.Community = community
 	g.Default.Target = ip
 	g.Default.Timeout = snmptimeout
@@ -73,9 +57,9 @@ func processSpecDlink(ip string, community string, model string) {
 	if model == "3526" {
 		oidd = ifStatusDlink3526
 	}
-	resultOperStatus, err2 := g.Default.BulkWalkAll(oidd)
-	if err2 != nil {
-		fmt.Printf("Walk Error(ifOperstate): %v\n", err2)
+	resultOperStatus, err := g.Default.BulkWalkAll(oidd)
+	if err != nil {
+		fmt.Printf("Walk Error(ifOperstate): %v\n", err)
 		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
@@ -130,9 +114,6 @@ func processSpecDlink(ip string, community string, model string) {
 				}
 
 			}
-			//fmt.Println("Port: ",ifindex,"  State: ",r.Value)
-
-			//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
 
 		}
 	}
@@ -152,28 +133,28 @@ func processStandart(ip string, community string) {
 		fmt.Print("host:=", ip, " ")
 		log.Println("Connect() err: ", err)
 	}
-	resultOperStatus, err2 := g.Default.BulkWalkAll(ifOperStatus)
-	if err2 != nil {
-		fmt.Printf("Walk Error(Operstatus): %v\n", err2)
+	resultOperStatus, err := g.Default.BulkWalkAll(ifOperStatus)
+	if err != nil {
+		fmt.Printf("Walk Error(Operstatus): %v\n", err)
 		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
-	resultDuplex, err3 := g.Default.BulkWalkAll(ifDuplex)
-	if err3 != nil {
-		fmt.Printf("Walk Error(ifDuplex): %v\n", err3)
+	resultDuplex, err := g.Default.BulkWalkAll(ifDuplex)
+	if err != nil {
+		fmt.Printf("Walk Error(ifDuplex): %v\n", err)
 		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
-	resultSpeed, err4 := g.Default.BulkWalkAll(ifSpeed)
-	if err4 != nil {
-		fmt.Printf("Walk Error(ifSpeed): %v\n", err4)
+	resultSpeed, err := g.Default.BulkWalkAll(ifSpeed)
+	if err != nil {
+		fmt.Printf("Walk Error(ifSpeed): %v\n", err)
 		log.Println(" --ip: ", ip, " community: ", community)
 		return
 
 	}
-	resultName, err5 := g.Default.BulkWalkAll(ifName)
-	if err4 != nil {
-		fmt.Printf("Walk Error(ifName): %v\n", err5)
+	resultName, err := g.Default.BulkWalkAll(ifName)
+	if err != nil {
+		fmt.Printf("Walk Error(ifName): %v\n", err)
 		log.Println(" --ip: ", ip, " community: ", community)
 		return
 	}
@@ -188,13 +169,9 @@ func processStandart(ip string, community string) {
 		ifs = append(ifs, I)
 		ifs[i].InterfacesDuplex = g.ToBigInt(r.Value).Uint64()
 		i++
-
-		//fmt.Println("Name OID: ", r.Name, "  Duplex: ", duplex)
-
 	}
-	endIfindex := startIfindex + len(ifs) - 1
 
-	//fmt.Println("func standart, ip: ",ip," Start index: ", startIfindex, "  End ifindex: ", endIfindex)
+	endIfindex := startIfindex + len(ifs) - 1
 
 	// get oper status of port
 	i = 0
@@ -265,11 +242,11 @@ func main() {
 	//var cfg *conf.Config
 	cfg := conf.GetConfig()
 	//fmt.Printf("%+v",cfg)
-	dbconn := mysql.Config {
-		User: 	cfg.DBuser,
+	dbconn := mysql.Config{
+		User:   cfg.DBuser,
 		Passwd: cfg.DBpass,
-		Net: "tcp",
-		Addr: cfg.DBhost+":"+cfg.DBport,
+		Net:    "tcp",
+		Addr:   cfg.DBhost + ":" + cfg.DBport,
 		DBName: cfg.Database,
 	}
 	db, err := sql.Open("mysql", dbconn.FormatDSN())
@@ -297,31 +274,31 @@ func main() {
 
 	for _, h := range hst {
 		if h.community != "" {
-			if s.Contains(h.Descr, "Cisco") ||                s.Contains(h.Descr, "S2328") ||
-				s.Contains(h.Descr, "DES-3200-10") ||         s.HasPrefix(h.Descr, "DES-3200-28") ||
+			if s.Contains(h.Descr, "Cisco") || s.Contains(h.Descr, "S2328") ||
+				s.Contains(h.Descr, "DES-3200-10") || s.HasPrefix(h.Descr, "DES-3200-28") ||
 				s.HasPrefix(h.Descr, "D-Link DES-3200-28") || s.Contains(h.Descr, "DES-1210-28") ||
-				s.Contains(h.Descr, "DGS-3120-24SC") ||       s.Contains(h.Descr, "DGS-3700-12G") ||
-				s.Contains(h.Descr, "ES-2024A") ||            s.Contains(h.Descr, "ES-3124") ||
-				s.Contains(h.Descr, "ES-3148") ||             s.Contains(h.Descr, "ISCOM2110") ||
-				s.Contains(h.Descr, "ISCOM2128") ||           s.Contains(h.Descr, "MES-1024") ||
-				s.Contains(h.Descr, "MES-1124") ||            s.Contains(h.Descr, "MES1124") ||
-				s.Contains(h.Descr, "MES-2124") ||            s.Contains(h.Descr, "MES2124") ||
-				s.Contains(h.Descr, "MES1024") ||             s.Contains(h.Descr, "MES3124") ||
-				s.Contains(h.Descr, "ROS") ||                 s.Contains(h.Descr, "SNR-S2940") ||
+				s.Contains(h.Descr, "DGS-3120-24SC") || s.Contains(h.Descr, "DGS-3700-12G") ||
+				s.Contains(h.Descr, "ES-2024A") || s.Contains(h.Descr, "ES-3124") ||
+				s.Contains(h.Descr, "ES-3148") || s.Contains(h.Descr, "ISCOM2110") ||
+				s.Contains(h.Descr, "ISCOM2128") || s.Contains(h.Descr, "MES-1024") ||
+				s.Contains(h.Descr, "MES-1124") || s.Contains(h.Descr, "MES1124") ||
+				s.Contains(h.Descr, "MES-2124") || s.Contains(h.Descr, "MES2124") ||
+				s.Contains(h.Descr, "MES1024") || s.Contains(h.Descr, "MES3124") ||
+				s.Contains(h.Descr, "ROS") || s.Contains(h.Descr, "SNR-S2940") ||
 				s.Contains(h.Descr, "SNR-S2950-24G") || s.Contains(h.Descr, "SNR-S2960-24G") {
 
 				processStandart(h.ip, h.community)
 
 			}
 
-			if s.Contains(h.Descr, "DES-3028") ||s.Contains(h.Descr, "DES-3526")  {
+			if s.Contains(h.Descr, "DES-3028") || s.Contains(h.Descr, "DES-3526") {
 				processSpecDlink(h.ip, h.community, "3028")
 			}
 
 			if h.Descr == "" {
 				fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
 			}
-			
+
 		}
 	}
 	fmt.Println("Done.")
