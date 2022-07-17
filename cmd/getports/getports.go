@@ -248,7 +248,7 @@ func PrintBadIfs(iftable []*Interfaces){
 // GetDevModel  gets device model vian snmp req to device
 
 func GetDevModel(ip string, community string) string {
-
+ return ""
 }
 func main() {
 	//var cfg *conf.Config
