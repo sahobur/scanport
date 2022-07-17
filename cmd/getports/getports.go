@@ -40,7 +40,7 @@ type Interfaces struct {
 	InterfacesStatus uint64 // state
 }
 
-func processSpecDlink(ip string, community string, model string) {
+func GetDlinkIfState(ip string, community string, model string) {
 	g.Default.Community = community
 	g.Default.Target = ip
 	g.Default.Timeout = snmptimeout
@@ -119,7 +119,7 @@ func processSpecDlink(ip string, community string, model string) {
 	}
 
 }
-func processStandart(ip string, community string) {
+func GetStandartIfState(ip string, community string) {
 	ifs := make([]*Interfaces, 0)
 	g.Default.Community = community
 	g.Default.Target = ip
@@ -238,6 +238,18 @@ func processStandart(ip string, community string) {
 
 }
 
+// PrintBadIfs  prints ifs with bad state, iftable = map with if states
+
+func PrintBadIfs(iftable []*Interfaces){
+
+ 
+}
+
+// GetDevModel  gets device model vian snmp req to device
+
+func GetDevModel(ip string, community string) string {
+
+}
 func main() {
 	//var cfg *conf.Config
 	cfg := conf.GetConfig()
@@ -287,12 +299,12 @@ func main() {
 				s.Contains(h.Descr, "ROS") || s.Contains(h.Descr, "SNR-S2940") ||
 				s.Contains(h.Descr, "SNR-S2950-24G") || s.Contains(h.Descr, "SNR-S2960-24G") {
 
-				processStandart(h.ip, h.community)
+				GetStandartIfState(h.ip, h.community)
 
 			}
 
 			if s.Contains(h.Descr, "DES-3028") || s.Contains(h.Descr, "DES-3526") {
-				processSpecDlink(h.ip, h.community, "3028")
+				GetDlinkIfState(h.ip, h.community, "3028")
 			}
 
 			if h.Descr == "" {
