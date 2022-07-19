@@ -3,13 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
-	g "github.com/gosnmp/gosnmp"
 	"log"
+	"regexp"
 	conf "scanport/internal/config"
 	"strconv"
 	s "strings"
 	"time"
+
+	"github.com/go-sql-driver/mysql"
+	g "github.com/gosnmp/gosnmp"
 )
 
 const snmptimeout time.Duration = 1000000
@@ -40,7 +42,7 @@ type Interfaces struct {
 	InterfacesStatus uint64 // state
 }
 
-func GetDlinkIfState(ip string, community string, model string) {
+func GetDlinkIfState(ip string, community string) {
 	g.Default.Community = community
 	g.Default.Target = ip
 	g.Default.Timeout = snmptimeout
@@ -51,6 +53,7 @@ func GetDlinkIfState(ip string, community string, model string) {
 		log.Println("Connect() err: ", err)
 	}
 	oidd := ""
+	model := GetDevModel(ip, community)
 	if model == "3028" {
 		oidd = ifStatusDlink3028
 	}
@@ -240,15 +243,35 @@ func GetStandartIfState(ip string, community string) {
 
 // PrintBadIfs  prints ifs with bad state, iftable = map with if states
 
-func PrintBadIfs(iftable []*Interfaces){
+func PrintBadIfs(iftable []*Interfaces) {
 
- 
 }
 
-// GetDevModel  gets device model vian snmp req to device
+// isStdOID returns truie if dev has std oid
+//
+func devType(descr string) string {
+
+	match, err := regexp.MatchString("Cisco|S2328|DES-3200-10|DES-3200-28|D-Link DES-3200-28|DES-1210-28|DGS-3120-24SC|DGS-3700-12G|ES-2024A|ES-3124|ES-3148|ISCOM2110|ISCOM2128|MES-1024|MES-1124|MES-2124|MES2124|MES1024|MES3124|ROS|SNR-S2940|SNR-S2950-24G", descr)
+	if err != nil {
+		panic(err)
+	}
+	if match {
+		return "std"
+	}
+	match, err = regexp.MatchString("DES-3028|DES-3526", descr)
+	if err != nil {
+		panic(err)
+	}
+	if match {
+		return "DL3028"
+	}
+	return "UNK"
+
+}
 
 func GetDevModel(ip string, community string) string {
- return ""
+
+	return "m"
 }
 func main() {
 	//var cfg *conf.Config
@@ -286,28 +309,16 @@ func main() {
 
 	for _, h := range hst {
 		if h.community != "" {
-			if s.Contains(h.Descr, "Cisco") || s.Contains(h.Descr, "S2328") ||
-				s.Contains(h.Descr, "DES-3200-10") || s.HasPrefix(h.Descr, "DES-3200-28") ||
-				s.HasPrefix(h.Descr, "D-Link DES-3200-28") || s.Contains(h.Descr, "DES-1210-28") ||
-				s.Contains(h.Descr, "DGS-3120-24SC") || s.Contains(h.Descr, "DGS-3700-12G") ||
-				s.Contains(h.Descr, "ES-2024A") || s.Contains(h.Descr, "ES-3124") ||
-				s.Contains(h.Descr, "ES-3148") || s.Contains(h.Descr, "ISCOM2110") ||
-				s.Contains(h.Descr, "ISCOM2128") || s.Contains(h.Descr, "MES-1024") ||
-				s.Contains(h.Descr, "MES-1124") || s.Contains(h.Descr, "MES1124") ||
-				s.Contains(h.Descr, "MES-2124") || s.Contains(h.Descr, "MES2124") ||
-				s.Contains(h.Descr, "MES1024") || s.Contains(h.Descr, "MES3124") ||
-				s.Contains(h.Descr, "ROS") || s.Contains(h.Descr, "SNR-S2940") ||
-				s.Contains(h.Descr, "SNR-S2950-24G") || s.Contains(h.Descr, "SNR-S2960-24G") {
-
+			dtype := devType(h.Descr)
+			if dtype == "STD" {
 				GetStandartIfState(h.ip, h.community)
-
 			}
 
-			if s.Contains(h.Descr, "DES-3028") || s.Contains(h.Descr, "DES-3526") {
-				GetDlinkIfState(h.ip, h.community, "3028")
+			if dtype == "DL3028" {
+				GetDlinkIfState(h.ip, h.community)
 			}
 
-			if h.Descr == "" {
+			if dtype == "UNK" {
 				fmt.Println("IP: ", h.ip, "  UNKNOWN DEVICE")
 			}
 
