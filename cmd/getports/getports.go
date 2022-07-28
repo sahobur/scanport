@@ -42,6 +42,11 @@ type Interfaces struct {
 	InterfacesStatus uint64 // state
 }
 
+const DL3028 = ".1.3.6.1.4.1.171.10.63.6"
+const DL3526 = ".1.3.6.1.4.1.171.10.64.1"
+
+var SysObjOid = []string{"1.3.6.1.2.1.1.2.0"}
+
 func GetDlinkIfState(ip string, community string) {
 	g.Default.Community = community
 	g.Default.Target = ip
@@ -53,7 +58,7 @@ func GetDlinkIfState(ip string, community string) {
 		log.Println("Connect() err: ", err)
 	}
 	oidd := ""
-	model := GetDevModel(ip, community)
+	model := GetDLinkModel(ip, community)
 	if model == "3028" {
 		oidd = ifStatusDlink3028
 	}
@@ -203,7 +208,6 @@ func GetStandartIfState(ip string, community string) {
 		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesName = string(r.Value.([]byte))
 
-			//fmt.Println("I: ", i, "  Value: ", string(r.Value.([]byte)))
 			i++
 		} else {
 			continue
@@ -224,7 +228,7 @@ func GetStandartIfState(ip string, community string) {
 			continue
 		}
 	}
-	//fmt.Println(ifs)
+
 	for _, r := range ifs {
 		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
 			duplex := "UNK"
@@ -241,10 +245,11 @@ func GetStandartIfState(ip string, community string) {
 
 }
 
-// PrintBadIfs  prints ifs with bad state, iftable = map with if states
-
-func PrintBadIfs(iftable []*Interfaces) {
-
+func checkErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal(err)
+	}
 }
 
 // isStdOID returns truie if dev has std oid
@@ -256,7 +261,7 @@ func devType(descr string) string {
 		panic(err)
 	}
 	if match {
-		return "std"
+		return "STD"
 	}
 	match, err = regexp.MatchString("DES-3028|DES-3526", descr)
 	if err != nil {
@@ -269,10 +274,48 @@ func devType(descr string) string {
 
 }
 
-func GetDevModel(ip string, community string) string {
+// GetDLinkModel return model of DLink dev
 
-	return "m"
+func GetDLinkModel(ip string, community string) string {
+
+	var snmpinstance g.GoSNMP
+	snmpinstance.Community = community
+	snmpinstance.Port = 161
+	snmpinstance.MaxOids = 80
+	snmpinstance.Version = 0x1
+	snmpinstance.Target = ip
+	snmpinstance.Timeout = 2 * time.Second
+	snmpinstance.Retries = 4
+	err := snmpinstance.Connect()
+	checkErr(err)
+	defer snmpinstance.Conn.Close()
+	result, err := snmpinstance.Get(SysObjOid)
+	checkErr(err)
+	if err == nil {
+		for _, variable := range result.Variables {
+			//fmt.Printf("%d: oid: %s ", i, variable.Name)
+
+			// the Value of each variable returned by Get() implements
+			// interface{}. You could do a type switch...
+			switch variable.Type {
+
+			case g.OctetString:
+				fmt.Printf("string: %s\n", string(variable.Value.([]byte)))
+			case g.ObjectIdentifier:
+				res := variable.Value.(string)
+				if res == DL3028 {
+					return "3028"
+				}
+				if res == DL3526 {
+					return "3526"
+				}
+
+			}
+		}
+	}
+	return "NODLINK"
 }
+
 func main() {
 	//var cfg *conf.Config
 	cfg := conf.GetConfig()
