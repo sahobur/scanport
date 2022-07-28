@@ -42,6 +42,11 @@ type Interfaces struct {
 	InterfacesStatus uint64 // state
 }
 
+const DL3028 = ".1.3.6.1.4.1.171.10.63.6"
+const DL3526 = ".1.3.6.1.4.1.171.10.64.1"
+
+var SysObjOid = []string{"1.3.6.1.2.1.1.2.0"}
+
 func GetDlinkIfState(ip string, community string) {
 	g.Default.Community = community
 	g.Default.Target = ip
@@ -53,7 +58,7 @@ func GetDlinkIfState(ip string, community string) {
 		log.Println("Connect() err: ", err)
 	}
 	oidd := ""
-	model := GetDevModel(ip, community)
+	model := GetDLinkModel(ip, community)
 	if model == "3028" {
 		oidd = ifStatusDlink3028
 	}
@@ -241,6 +246,12 @@ func GetStandartIfState(ip string, community string) {
 
 }
 
+func checkErr(err error) {
+	if err != nil {
+		fmt.Println(err)
+		log.Fatal(err)
+	}
+}
 // PrintBadIfs  prints ifs with bad state, iftable = map with if states
 
 func PrintBadIfs(iftable []*Interfaces) {
@@ -256,7 +267,7 @@ func devType(descr string) string {
 		panic(err)
 	}
 	if match {
-		return "std"
+		return "STD"
 	}
 	match, err = regexp.MatchString("DES-3028|DES-3526", descr)
 	if err != nil {
@@ -269,10 +280,48 @@ func devType(descr string) string {
 
 }
 
-func GetDevModel(ip string, community string) string {
+func GetDLinkModel(ip string, community string) string {
 
-	return "m"
+	var snmpinstance g.GoSNMP
+	snmpinstance.Community = community
+	snmpinstance.Port = 161
+	snmpinstance.MaxOids = 80
+	snmpinstance.Version = 0x1
+	snmpinstance.Target = ip
+	snmpinstance.Timeout = 2 * time.Second
+	snmpinstance.Retries = 4
+	err := snmpinstance.Connect()
+	checkErr(err)
+	defer snmpinstance.Conn.Close()
+	//objID := "UNKNOWN"
+
+	result, err2 := snmpinstance.Get(SysObjOid)
+	checkErr(err2)
+	if err2 == nil {
+		for _, variable := range result.Variables {
+			//fmt.Printf("%d: oid: %s ", i, variable.Name)
+
+			// the Value of each variable returned by Get() implements
+			// interface{}. You could do a type switch...
+			switch variable.Type {
+
+			case g.OctetString:
+				fmt.Printf("string: %s\n", string(variable.Value.([]byte)))
+			case g.ObjectIdentifier:
+				res := variable.Value.(string)
+				if res == DL3028 {
+					return "3028"
+				}
+				if res == DL3526 {
+					return "3526"
+				}
+
+			}
+		}
+	}
+	return "NODLINK"
 }
+
 func main() {
 	//var cfg *conf.Config
 	cfg := conf.GetConfig()
