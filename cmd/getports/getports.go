@@ -208,7 +208,6 @@ func GetStandartIfState(ip string, community string) {
 		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesName = string(r.Value.([]byte))
 
-			//fmt.Println("I: ", i, "  Value: ", string(r.Value.([]byte)))
 			i++
 		} else {
 			continue
@@ -229,7 +228,7 @@ func GetStandartIfState(ip string, community string) {
 			continue
 		}
 	}
-	//fmt.Println(ifs)
+
 	for _, r := range ifs {
 		if r.InterfacesStatus == 1 && (r.InterfacesDuplex == 2 || r.InterfacesSpeed == 10) {
 			duplex := "UNK"
@@ -251,11 +250,6 @@ func checkErr(err error) {
 		fmt.Println(err)
 		log.Fatal(err)
 	}
-}
-// PrintBadIfs  prints ifs with bad state, iftable = map with if states
-
-func PrintBadIfs(iftable []*Interfaces) {
-
 }
 
 // isStdOID returns truie if dev has std oid
@@ -280,6 +274,8 @@ func devType(descr string) string {
 
 }
 
+// GetDLinkModel return model of DLink dev
+
 func GetDLinkModel(ip string, community string) string {
 
 	var snmpinstance g.GoSNMP
@@ -293,11 +289,9 @@ func GetDLinkModel(ip string, community string) string {
 	err := snmpinstance.Connect()
 	checkErr(err)
 	defer snmpinstance.Conn.Close()
-	//objID := "UNKNOWN"
-
-	result, err2 := snmpinstance.Get(SysObjOid)
-	checkErr(err2)
-	if err2 == nil {
+	result, err := snmpinstance.Get(SysObjOid)
+	checkErr(err)
+	if err == nil {
 		for _, variable := range result.Variables {
 			//fmt.Printf("%d: oid: %s ", i, variable.Name)
 
