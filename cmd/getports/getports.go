@@ -76,7 +76,7 @@ func GetDlinkIfState(ip string, community string) {
 			aoid := s.Split(r.Name, ".")
 			ifindex, err := strconv.Atoi(aoid[16])
 			if err != nil {
-				panic("error string conv")
+				panic(err)
 			}
 			portstate := g.ToBigInt(r.Value).Uint64()
 
@@ -103,7 +103,7 @@ func GetDlinkIfState(ip string, community string) {
 			aoid := s.Split(r.Name, ".")
 			ifindex, err := strconv.Atoi(aoid[16])
 			if err != nil {
-				panic("error string conv")
+				panic(err)
 			}
 			portstate := g.ToBigInt(r.Value).Uint64()
 
@@ -203,7 +203,7 @@ func GetStandartIfState(ip string, community string) {
 		aoid := s.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
-			panic("error string conv")
+			panic(err)
 		}
 		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesName = string(r.Value.([]byte))
@@ -219,7 +219,7 @@ func GetStandartIfState(ip string, community string) {
 		aoid := s.Split(r.Name, ".")
 		ifindex, err := strconv.Atoi(aoid[12])
 		if err != nil {
-			panic("error string conv")
+			panic(err)
 		}
 		if ifindex >= startIfindex && ifindex <= endIfindex {
 			ifs[i].InterfacesSpeed = g.ToBigInt(r.Value).Uint64()
@@ -316,27 +316,30 @@ func GetDLinkModel(ip string, community string) string {
 	return "NODLINK"
 }
 
-func main() {
-	//var cfg *conf.Config
-	cfg := conf.GetConfig()
-	//fmt.Printf("%+v",cfg)
+func DBConnect(cfg *conf.Config) (*sql.DB, error) {
 	dbconn := mysql.Config{
 		User:   cfg.DBuser,
 		Passwd: cfg.DBpass,
 		Net:    "tcp",
 		Addr:   cfg.DBhost + ":" + cfg.DBport,
 		DBName: cfg.Database,
+		AllowNativePasswords: true,
 	}
+	
 	db, err := sql.Open("mysql", dbconn.FormatDSN())
 	if err != nil {
-		log.Fatal(err)
+		return nil,err
 	}
-	defer db.Close()
+	return db,nil
+}
+
+func GetHosts(db *sql.DB) []*Hosts {
 	rows, err := db.Query("SELECT * from communities")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
+
 	hst := make([]*Hosts, 0)
 	for rows.Next() {
 		h := new(Hosts)
@@ -349,7 +352,18 @@ func main() {
 	if err = rows.Err(); err != nil {
 		log.Fatal(err)
 	}
+	return hst
+}
 
+func main() {
+
+	cfg := conf.GetConfig()
+	db, err := DBConnect(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	hst := GetHosts(db)
 	for _, h := range hst {
 		if h.community != "" {
 			dtype := devType(h.Descr)
