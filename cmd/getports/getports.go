@@ -14,7 +14,7 @@ import (
 	g "github.com/gosnmp/gosnmp"
 )
 
-const snmptimeout time.Duration = 1000000
+const snmptimeout time.Duration = 1000000000
 
 // OIDs describes wthernet port
 const (
@@ -256,7 +256,7 @@ func checkErr(err error) {
 //
 func devType(descr string) string {
 
-	match, err := regexp.MatchString("Cisco|S2328|DES-3200-10|DES-3200-28|D-Link DES-3200-28|DES-1210-28|DGS-3120-24SC|DGS-3700-12G|ES-2024A|ES-3124|ES-3148|ISCOM2110|ISCOM2128|MES-1024|MES-1124|MES-2124|MES2124|MES1024|MES3124|ROS|SNR-S2940|SNR-S2950-24G", descr)
+	match, err := regexp.MatchString("Cisco|S2328|DES-3200-10|DES-3200-28|D-Link DES-3200-28|DES-1210-28|DGS-3120-24SC|DGS-3700-12G|ES-2024A|ES-3124|ES-3148|ISCOM2110|ISCOM2128|MES1124|MES-1024|MES-1124|MES-2124|MES2124|MES1024|MES3124|ROS|SNR-S2940|SNR-S2950-24G", descr)
 	if err != nil {
 		panic(err)
 	}
@@ -355,6 +355,8 @@ func GetHosts(db *sql.DB) []*Hosts {
 	return hst
 }
 
+
+
 func main() {
 
 	cfg := conf.GetConfig()
@@ -368,6 +370,7 @@ func main() {
 		if h.community != "" {
 			dtype := devType(h.Descr)
 			if dtype == "STD" {
+				fmt.Println("IP: ",h.ip,"  ",h.community)
 				GetStandartIfState(h.ip, h.community)
 			}
 
