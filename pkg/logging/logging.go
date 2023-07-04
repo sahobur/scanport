@@ -1,7 +1,7 @@
 package logging
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,6 +31,9 @@ func (hook writeHook) Levels() []logrus.Level {
 	return hook.LogLevels
 }
 
+func (hook writeHook)Fire(*logrus.Entry) error {
+	return nil
+}
 func Init() {
 	l := logrus.New()
 	l.SetReportCaller(true)
@@ -56,6 +59,6 @@ func Init() {
 	l.SetOutput(io.Discard)
 	l.AddHook(&writeHook{
 		Writer: []io.Writer{logf, os.Stdout},
-		LogLevels: logrus.AllLevels
+		LogLevels: logrus.AllLevels,
 	})
 }
