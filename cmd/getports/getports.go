@@ -5,47 +5,17 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	conf "scanport/internal/config"
+	conf "github.com/sahobur/scanport/internal/config"
+	"github.com/sahobur/scanport/internal/entity"
 	"strconv"
 	s "strings"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
 	g "github.com/gosnmp/gosnmp"
+
 )
 
-const snmptimeout time.Duration = 1000000000
-
-// OIDs describes wthernet port
-const (
-	ifOperStatus      string = "1.3.6.1.2.1.2.2.1.8"
-	ifSpeed           string = "1.3.6.1.2.1.31.1.1.1.15"
-	ifDuplex          string = "1.3.6.1.2.1.10.7.2.1.19"
-	ifName            string = "1.3.6.1.2.1.31.1.1.1.1"
-	ifStatusDlink3028 string = "1.3.6.1.4.1.171.11.63.6.2.2.1.1.5"
-	ifStatusDlink3526 string = "1.3.6.1.4.1.171.11.64.1.2.4.4.1.6"
-)
-
-// Host struct
-type Hosts struct {
-	id        int16  // device id in DB
-	ip        string // ip address
-	community string // snmp commmunity string
-	Descr     string // description
-}
-
-// Ethernet Interface struct
-type Interfaces struct {
-	InterfacesName   string // name
-	InterfacesDuplex uint64 // duplex
-	InterfacesSpeed  uint64 // speed
-	InterfacesStatus uint64 // state
-}
-
-const DL3028 = ".1.3.6.1.4.1.171.10.63.6"
-const DL3526 = ".1.3.6.1.4.1.171.10.64.1"
-
-var SysObjOid = []string{"1.3.6.1.2.1.1.2.0"}
 
 func GetDlinkIfState(ip string, community string) {
 	g.Default.Community = community

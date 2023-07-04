@@ -1,12 +1,12 @@
-module scanport
+module github.com/sahobur/scanport
 
-go 1.18
+go 1.20
 
 require (
-	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/gosnmp/gosnmp v1.35.0
-	github.com/ilyakaznacheev/cleanenv v1.3.0
-	github.com/sirupsen/logrus v1.9.0
+	github.com/ilyakaznacheev/cleanenv v1.4.2
+	github.com/sirupsen/logrus v1.9.3
 )
 
 require (
